@@ -1,29 +1,11 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
-from typing import List
-from fastapi.middleware.cors import CORSMiddleware
+from typing import Optional
 import requests
 from collections import OrderedDict
 
 # Create FastAPI instance
-# Create FastAPI instance
 app = FastAPI()
-
-# CORS configuration
-origins = [
-    "http://localhost",
-    "http://localhost:8000",
-    "http://localhost:3000",
-]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
 
 # Function to check if a number is prime
 def is_prime(n: int) -> bool:
@@ -57,12 +39,16 @@ def get_fun_fact(number: int) -> str:
 
 # Endpoint to classify number
 @app.get("/api/classify-number")
-async def classify_number(number: int):
+async def classify_number(number: Optional[str] = None):
     try:
-        # Attempt to convert the number to an integer
-        number = int(number)
-    except ValueError:
-        # If conversion fails, return a custom error message with status 400
+        # Try converting the query parameter to an integer
+        if number is not None:
+            number = int(number)
+        else:
+            raise ValueError("No number provided")
+
+    except (ValueError, TypeError):
+        # Return a custom error response if conversion fails
         error_response = OrderedDict([
             ("number", "alphabet"),
             ("error", True),
