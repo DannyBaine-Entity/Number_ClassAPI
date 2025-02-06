@@ -1,14 +1,14 @@
-from flask import Flask, request, jsonify, Response
-import json
-from flask_cors import CORS
-from collections import OrderedDict
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import JSONResponse
+from typing import List
 import requests
+from collections import OrderedDict
 
-app = Flask(__name__)
-CORS(app)
+# Create FastAPI instance
+app = FastAPI()
 
 # Function to check if a number is prime
-def is_prime(n):
+def is_prime(n: int) -> bool:
     if n <= 1:
         return False
     for i in range(2, int(n ** 0.5) + 1):
@@ -17,32 +17,36 @@ def is_prime(n):
     return True
 
 # Function to check if a number is an Armstrong number
-def is_armstrong(n):
+def is_armstrong(n: int) -> bool:
     digits = str(n)
     num_digits = len(digits)
     total = sum(int(digit) ** num_digits for digit in digits)
     return total == n
 
 # Function to check if a number is perfect
-def is_perfect(n):
+def is_perfect(n: int) -> bool:
     divisors = [i for i in range(1, n) if n % i == 0]
     return sum(divisors) == n
 
-# Endpoint to classify number
-@app.route('/api/classify-number', methods=['GET'])
-def classify_number():
-    number = request.args.get('number')
+# Function to get a fun fact from the Numbers API
+def get_fun_fact(number: int) -> str:
+    url = f'http://numbersapi.com/{number}?json'
+    response = requests.get(url)
+    if response.status_code == 200:
+        data = response.json()
+        return data.get('text', 'No fun fact available.')
+    return "No fun fact available."
 
+# Endpoint to classify number
+@app.get("/api/classify-number")
+async def classify_number(number: int):
     # Error handling for non-integer input
-    try:
-        number = int(number)
-    except ValueError:
-        # Manually create an OrderedDict for the error response
+    if not isinstance(number, int):
         error_response = OrderedDict([
             ("number", number),
             ("error", True)
         ])
-        return Response(json.dumps(error_response), mimetype='application/json'), 400
+        return JSONResponse(status_code=400, content=error_response)
 
     # Basic properties
     is_prime_number = is_prime(number)
@@ -74,17 +78,10 @@ def classify_number():
         ("fun_fact", fun_fact)
     ])
 
-    # Manually serialize to JSON and return with Response
-    return Response(json.dumps(response), mimetype='application/json')
+    # Return response as JSON
+    return JSONResponse(content=response)
 
-# Function to get a fun fact from the Numbers API
-def get_fun_fact(number):
-    url = f'http://numbersapi.com/{number}?json'
-    response = requests.get(url)
-    if response.status_code == 200:
-        data = response.json()
-        return data.get('text', 'No fun fact available.')
-    return "No fun fact available."
-
+# Run the application
 if __name__ == '__main__':
-    app.run(debug=True)
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
