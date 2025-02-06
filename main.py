@@ -58,11 +58,15 @@ def get_fun_fact(number: int) -> str:
 # Endpoint to classify number
 @app.get("/api/classify-number")
 async def classify_number(number: int):
-    # Error handling for non-integer input
-    if not isinstance(number, int):
+    try:
+        # Attempt to convert the number to an integer
+        number = int(number)
+    except ValueError:
+        # If conversion fails, return a custom error message with status 400
         error_response = OrderedDict([
-            ("number", number),
-            ("error", True)
+            ("number", "alphabet"),
+            ("error", True),
+            ("message", "Invalid input. Please provide a valid integer.")
         ])
         return JSONResponse(status_code=400, content=error_response)
 
