@@ -1,11 +1,29 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from typing import List
+from fastapi.middleware.cors import CORSMiddleware
 import requests
 from collections import OrderedDict
 
 # Create FastAPI instance
+# Create FastAPI instance
 app = FastAPI()
+
+# CORS configuration
+origins = [
+    "http://localhost",
+    "http://localhost:8000",
+    "http://localhost:3000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 # Function to check if a number is prime
 def is_prime(n: int) -> bool:
