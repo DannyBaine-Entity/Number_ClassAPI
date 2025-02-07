@@ -67,7 +67,7 @@ async def classify_number(number: Optional[str] = None):
     # If input is classified as alphabet or negative, return a classification error
     if classification in ["alphabet", "negative"]:
         error_response = OrderedDict([
-            ("classification", classification),
+            ("number", classification),
             ("error", True)
         ])
         return JSONResponse(status_code=400, content=error_response)
