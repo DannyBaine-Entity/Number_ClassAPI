@@ -37,63 +37,39 @@ def get_fun_fact(number: int) -> str:
         return data.get('text', 'No fun fact available.')
     return "No fun fact available."
 
+# Function to create error response
+def create_error_response(input_value: str, classification: str, message: str):
+    return JSONResponse(
+        status_code=400,
+        content=OrderedDict([
+            ("input", input_value),
+            ("classification", classification),
+            ("error", True),
+            ("message", message)
+        ])
+    )
+
 # Endpoint to classify number
 @app.get("/api/classify-number")
 async def classify_number(number: Optional[str] = None):
-    # Reject negative numbers outright
-    if number is not None and number.startswith("-"):
-        error_response = OrderedDict([
-            ("input", number),
-            ("classification", "negative"),
-            ("error", True),
-            ("message", "Negative numbers are not allowed.")
-        ])
-        return JSONResponse(status_code=400, content=error_response)
+    if not number or not number.lstrip('-').isdigit():
+        return create_error_response(number, "alphabet", "Invalid input: not a number.")
 
-    # Try converting the string input to an integer
-    try:
-        if number is not None:
-            number_int = int(number)
-        else:
-            # If no number provided, classify as alphabet
-            error_response = OrderedDict([
-                ("input", number),
-                ("classification", "alphabet"),
-                ("error", True),
-                ("message", "Invalid input: not a number.")
-            ])
-            return JSONResponse(status_code=400, content=error_response)
-    except ValueError:
-        # If conversion fails, classify as alphabet
-        error_response = OrderedDict([
-            ("input", number),
-            ("classification", "alphabet"),
-            ("error", True),
-            ("message", "Invalid input: not a number.")
-        ])
-        return JSONResponse(status_code=400, content=error_response)
+    if number.startswith("-"):
+        return create_error_response(number, "negative", "Negative numbers are not allowed.")
 
-    # Basic properties if it's an integer
+    number_int = int(number)
     is_prime_number = is_prime(number_int)
     is_armstrong_number = is_armstrong(number_int)
     is_perfect_number = is_perfect(number_int)
 
-    # Determine properties of the number
-    properties = []
+    properties = ["even" if number_int % 2 == 0 else "odd"]
     if is_armstrong_number:
         properties.append("armstrong")
-    if number_int % 2 == 0:
-        properties.append("even")
-    else:
-        properties.append("odd")
 
-    # Get a fun fact from Numbers API
     fun_fact = get_fun_fact(number_int)
-
-    # Calculate digit sum
     digit_sum = sum(int(digit) for digit in str(number_int))
 
-    # Creating OrderedDict to preserve the response order
     response = OrderedDict([
         ("number", number_int),
         ("is_prime", is_prime_number),
@@ -103,7 +79,6 @@ async def classify_number(number: Optional[str] = None):
         ("fun_fact", fun_fact)
     ])
 
-    # Return response as JSON
     return JSONResponse(content=response)
 
 # Run the application
