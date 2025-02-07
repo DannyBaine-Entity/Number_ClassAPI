@@ -18,19 +18,15 @@ def is_prime(n: int) -> bool:
 
 # Function to check if a number is an Armstrong number
 def is_armstrong(n: int) -> bool:
-    if n < 0:  # Reject negative numbers
-        return False
-    digits = str(abs(n))  # Use absolute value to avoid negative sign
+    digits = str(n)
     num_digits = len(digits)
     total = sum(int(digit) ** num_digits for digit in digits)
-    return total == abs(n)
+    return total == n
 
 # Function to check if a number is perfect
 def is_perfect(n: int) -> bool:
-    if n < 0:  # Reject negative numbers
-        return False
-    divisors = [i for i in range(1, abs(n)) if n % i == 0]  # Use absolute value
-    return sum(divisors) == abs(n)
+    divisors = [i for i in range(1, n) if n % i == 0]
+    return sum(divisors) == n
 
 # Function to get a fun fact from the Numbers API
 def get_fun_fact(number: int) -> str:
@@ -44,36 +40,40 @@ def get_fun_fact(number: int) -> str:
 # Endpoint to classify number
 @app.get("/api/classify-number")
 async def classify_number(number: Optional[str] = None):
-    # Initial classification
-    classification = "unknown"
-
-    # Check if the input is negative
+    # Reject negative numbers outright
     if number is not None and number.startswith("-"):
-        classification = "negative"
+        error_response = OrderedDict([
+            ("input", number),
+            ("classification", "negative"),
+            ("error", True),
+            ("message", "Negative numbers are not allowed.")
+        ])
+        return JSONResponse(status_code=400, content=error_response)
 
     # Try converting the string input to an integer
     try:
         if number is not None:
-            # If the string is a valid number (including negative numbers), classify as integer
             number_int = int(number)
-            classification = "integer"
         else:
             # If no number provided, classify as alphabet
-            classification = "alphabet"
+            error_response = OrderedDict([
+                ("input", number),
+                ("classification", "alphabet"),
+                ("error", True),
+                ("message", "Invalid input: not a number.")
+            ])
+            return JSONResponse(status_code=400, content=error_response)
     except ValueError:
         # If conversion fails, classify as alphabet
-        classification = "alphabet"
-
-    # If input is classified as alphabet or negative, return a classification error
-    if classification in ["alphabet", "negative"]:
         error_response = OrderedDict([
-            ("number", classification),
-            ("error", True)
+            ("input", number),
+            ("classification", "alphabet"),
+            ("error", True),
+            ("message", "Invalid input: not a number.")
         ])
         return JSONResponse(status_code=400, content=error_response)
 
     # Basic properties if it's an integer
-    number_int = int(number)
     is_prime_number = is_prime(number_int)
     is_armstrong_number = is_armstrong(number_int)
     is_perfect_number = is_perfect(number_int)
@@ -90,8 +90,8 @@ async def classify_number(number: Optional[str] = None):
     # Get a fun fact from Numbers API
     fun_fact = get_fun_fact(number_int)
 
-    # Calculate digit sum using the absolute value of the number
-    digit_sum = sum(int(digit) for digit in str(abs(number_int)))  # Use absolute value for digit sum
+    # Calculate digit sum
+    digit_sum = sum(int(digit) for digit in str(number_int))
 
     # Creating OrderedDict to preserve the response order
     response = OrderedDict([
