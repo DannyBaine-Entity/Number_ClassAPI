@@ -38,14 +38,12 @@ def get_fun_fact(number: int) -> str:
     return "No fun fact available."
 
 # Function to create error response
-def create_error_response(input_value: str, classification: str, message: str):
+def create_error_response(classification: str):
     return JSONResponse(
         status_code=400,
         content=OrderedDict([
-            ("input", input_value),
-            ("classification", classification),
+            ("number", classification),
             ("error", True),
-            ("message", message)
         ])
     )
 
@@ -53,10 +51,10 @@ def create_error_response(input_value: str, classification: str, message: str):
 @app.get("/api/classify-number")
 async def classify_number(number: Optional[str] = None):
     if not number or not number.lstrip('-').isdigit():
-        return create_error_response(number, "alphabet", "Invalid input: not a number.")
+        return create_error_response("alphabet")
 
     if number.startswith("-"):
-        return create_error_response(number, "negative", "Negative numbers are not allowed.")
+        return create_error_response("negative")
 
     number_int = int(number)
     is_prime_number = is_prime(number_int)
