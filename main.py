@@ -29,10 +29,12 @@ def is_prime(n: int) -> bool:
 
 # Function to check if a number is an Armstrong number
 def is_armstrong(n: int) -> bool:
+    n = abs(n)  # Convert to positive before processing
     digits = str(n)
     num_digits = len(digits)
     total = sum(int(digit) ** num_digits for digit in digits)
     return total == n
+
 
 # Function to check if a number is perfect
 def is_perfect(n: int) -> bool:
@@ -61,10 +63,10 @@ def create_error_response(classification: str):
 # Endpoint to classify number
 @app.get("/api/classify-number")
 async def classify_number(number: Optional[str] = None):
-    if not number or not number.lstrip('-').isdigit():
+    if not number or not number.lstrip('-').isdigit():  # Ensure valid integer input
         return create_error_response("alphabet")
 
-    number_int = int(number)
+    number_int = int(number)  # Convert to integer (handles negatives)
     is_prime_number = is_prime(number_int)
     is_armstrong_number = is_armstrong(number_int)
     is_perfect_number = is_perfect(number_int)
@@ -74,7 +76,7 @@ async def classify_number(number: Optional[str] = None):
         properties.append("armstrong")
 
     fun_fact = get_fun_fact(number_int)
-    digit_sum = sum(int(digit) for digit in str(number_int))
+    digit_sum = sum(int(digit) for digit in str(abs(number_int)))  # Use abs() to avoid '-' sign issue
 
     response = OrderedDict([
         ("number", number_int),
@@ -86,6 +88,7 @@ async def classify_number(number: Optional[str] = None):
     ])
 
     return JSONResponse(content=response)
+
 
 # Run the application
 if __name__ == '__main__':
