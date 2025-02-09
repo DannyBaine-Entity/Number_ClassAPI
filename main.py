@@ -1,11 +1,22 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional
 import requests
 from collections import OrderedDict
+import uvicorn
 
 # Create FastAPI instance
 app = FastAPI()
+
+# CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all domains (or specify specific ones)
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
 
 # Function to check if a number is prime
 def is_prime(n: int) -> bool:
@@ -53,9 +64,6 @@ async def classify_number(number: Optional[str] = None):
     if not number or not number.lstrip('-').isdigit():
         return create_error_response("alphabet")
 
-    if number.startswith("-"):
-        return create_error_response("negative")
-
     number_int = int(number)
     is_prime_number = is_prime(number_int)
     is_armstrong_number = is_armstrong(number_int)
@@ -81,5 +89,4 @@ async def classify_number(number: Optional[str] = None):
 
 # Run the application
 if __name__ == '__main__':
-    import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
